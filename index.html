@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="分子球 - 使用手势控制粒子特效的互动体验">
+  <title>分子球 — 手势粒子</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <video id="video" autoplay playsinline muted aria-label="手势检测摄像头预览"></video>
+
+  <div id="status" role="status" aria-live="polite">
+    <span class="status-icon">墨</span>
+    <span class="status-text">等待摄像头...</span>
+  </div>
+
+  <div id="colorPicker">
+    <button class="swatch active" data-color="multi" title="星云">
+      <span style="background: conic-gradient(from 0deg, #ff006e, #8338ec, #3a86ff, #06d6a0, #ffd166, #ff006e);"></span>
+    </button>
+    <button class="swatch" data-color="yellow" title="恒星">
+      <span style="background: #ffd700;"></span>
+    </button>
+    <button class="swatch" data-color="blue" title="深空">
+      <span style="background: #4488ff;"></span>
+    </button>
+    <button class="swatch" data-color="cyan" title="星尘">
+      <span style="background: #00e5ff;"></span>
+    </button>
+    <button class="swatch" data-color="green" title="极光">
+      <span style="background: #39ff14;"></span>
+    </button>
+    <button class="swatch" data-color="red" title="红巨星">
+      <span style="background: #ff2244;"></span>
+    </button>
+  </div>
+
+  <div class="gesture-guide">
+    <div class="gesture-item">
+      <span class="gesture-icon">聚</span>
+      <span class="gesture-label">握拳收缩</span>
+    </div>
+    <div class="gesture-item">
+      <span class="gesture-icon">展</span>
+      <span class="gesture-label">张手展开</span>
+    </div>
+    <div class="gesture-item">
+      <span class="gesture-icon">✌</span>
+      <span class="gesture-label">比耶 Li su</span>
+    </div>
+    <div class="gesture-item">
+      <span class="gesture-icon">双手</span>
+      <span class="gesture-label">显示时间</span>
+    </div>
+  </div>
+
+  <!-- 印章装饰 -->
+  <div class="seal-stamp">分子</div>
+
+  <!-- Settings toggle button -->
+  <button id="settingsToggle" class="settings-toggle" title="设置">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- Settings panel -->
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-header">
+      <span class="settings-title">设置</span>
+      <span id="fpsDisplay" class="fps-display">-- FPS</span>
+    </div>
+
+    <div class="setting-group">
+      <label class="setting-label" for="particleCount">
+        粒子数量
+        <span id="particleCountLabel" class="setting-value">800</span>
+      </label>
+      <input type="range" id="particleCount" min="200" max="1500" step="50" value="800" class="setting-slider">
+    </div>
+
+    <div class="setting-group">
+      <label class="setting-label">特效开关</label>
+      <div class="setting-toggles">
+        <label class="toggle-item">
+          <input type="checkbox" id="toggleTrails" checked>
+          <span class="toggle-switch"></span>
+          <span class="toggle-text">残影拖尾</span>
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" id="toggleGlow" checked>
+          <span class="toggle-switch"></span>
+          <span class="toggle-text">边缘发光</span>
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" id="toggleLinks" checked>
+          <span class="toggle-switch"></span>
+          <span class="toggle-text">分子键连线</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/hands.min.js"></script>
+  <script src="vendor/camera_utils.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
