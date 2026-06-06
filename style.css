@@ -1,0 +1,596 @@
+/* =============================================
+   分子球 — 手势粒子主题
+   深空背景 + 分子球粒子
+   ============================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a12;  /* 深空色 */
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  font-family: 'Noto Serif SC', 'Ma Shan Zheng', serif;
+}
+
+#canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#video {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 200px;
+  height: 150px;
+  border-radius: 8px;
+  border: 2px solid rgba(80, 70, 60, 0.2);
+  object-fit: cover;
+  transform: scaleX(-1);
+  z-index: 10;
+  opacity: 0.7;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.3s, box-shadow 0.3s;
+}
+
+#video:hover {
+  opacity: 0.9;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+}
+
+#status {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: rgba(15, 15, 25, 0.85);
+  border: 1px solid rgba(100, 150, 255, 0.15);
+  border-radius: 4px;
+  color: rgba(180, 200, 240, 0.85);
+  font-size: 14px;
+  font-family: 'Ma Shan Zheng', cursive;
+  z-index: 10;
+  pointer-events: none;
+  transition: color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 2px;
+}
+
+.status-icon {
+  color: rgba(100, 150, 255, 0.6);
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-text {
+  letter-spacing: 2px;
+}
+
+#colorPicker {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;  /* 方形印章风格 */
+  border: 1.5px solid rgba(100, 150, 255, 0.2);
+  background: transparent;
+  cursor: pointer;
+  padding: 3px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.swatch::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.swatch:hover {
+  transform: scale(1.15);
+  border-color: rgba(80, 70, 60, 0.4);
+}
+
+.swatch:hover::before {
+  border-color: rgba(80, 70, 60, 0.15);
+}
+
+.swatch.active {
+  border-color: rgba(40, 35, 30, 0.8);
+  box-shadow: 0 0 15px rgba(60, 50, 40, 0.2);
+}
+
+.swatch.active::before {
+  border-color: rgba(80, 70, 60, 0.2);
+}
+
+.swatch span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 1px;
+}
+
+.gesture-guide {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.gesture-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(15, 15, 25, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(100, 150, 255, 0.1);
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.gesture-item:hover {
+  border-color: rgba(100, 150, 255, 0.25);
+  background: rgba(20, 20, 35, 0.95);
+  transform: translateX(4px);
+}
+
+.gesture-icon {
+  font-size: 18px;
+}
+
+.gesture-label {
+  font-size: 13px;
+  color: rgba(180, 200, 240, 0.7);
+  letter-spacing: 3px;
+  font-family: 'Ma Shan Zheng', cursive;
+}
+
+/* =============================================
+   设置面板
+   ============================================= */
+
+.settings-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background: rgba(15, 15, 25, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(100, 150, 255, 0.15);
+  color: rgba(180, 200, 240, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-toggle:hover {
+  color: rgba(40, 35, 30, 0.8);
+  border-color: rgba(80, 70, 60, 0.3);
+  transform: rotate(30deg);
+}
+
+.settings-panel {
+  position: fixed;
+  top: 72px;
+  right: 24px;
+  width: 260px;
+  background: rgba(245, 240, 232, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(80, 70, 60, 0.12);
+  border-radius: 6px;
+  padding: 20px;
+  z-index: 20;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.settings-panel.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(80, 70, 60, 0.1);
+}
+
+.settings-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(40, 35, 30, 0.7);
+  letter-spacing: 3px;
+  font-family: 'Ma Shan Zheng', cursive;
+}
+
+.fps-display {
+  font-size: 11px;
+  color: rgba(40, 35, 30, 0.4);
+  font-family: monospace;
+}
+
+.setting-group {
+  margin-bottom: 16px;
+}
+
+.setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(40, 35, 30, 0.5);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.setting-value {
+  color: rgba(40, 35, 30, 0.6);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.setting-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(80, 70, 60, 0.1);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.setting-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;  /* 方形 */
+  background: rgba(40, 35, 30, 0.6);
+  border: 2px solid rgba(245, 240, 232, 0.8);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.setting-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: rgba(40, 35, 30, 0.8);
+}
+
+.setting-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(40, 35, 30, 0.6);
+  border: 2px solid rgba(245, 240, 232, 0.8);
+  cursor: pointer;
+}
+
+.setting-select {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(80, 70, 60, 0.05);
+  border: 1px solid rgba(80, 70, 60, 0.12);
+  border-radius: 4px;
+  color: rgba(40, 35, 30, 0.7);
+  font-size: 12px;
+  font-family: 'Noto Serif SC', serif;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.setting-select:hover,
+.setting-select:focus {
+  border-color: rgba(80, 70, 60, 0.3);
+}
+
+.setting-select option {
+  background: #f5f0e8;
+  color: rgba(40, 35, 30, 0.8);
+}
+
+.setting-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle-item input {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: rgba(80, 70, 60, 0.1);
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 1px;
+  background: rgba(80, 70, 60, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toggle-item input:checked + .toggle-switch {
+  background: rgba(40, 35, 30, 0.2);
+}
+
+.toggle-item input:checked + .toggle-switch::after {
+  left: 16px;
+  background: rgba(40, 35, 30, 0.7);
+}
+
+.toggle-text {
+  font-size: 12px;
+  color: rgba(40, 35, 30, 0.5);
+  letter-spacing: 0.5px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* =============================================
+   印章装饰元素
+   ============================================= */
+
+.seal-stamp {
+  position: fixed;
+  bottom: 24px;
+  right: 240px;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(100, 150, 255, 0.3);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 24px;
+  color: rgba(100, 150, 255, 0.4);
+  transform: rotate(-5deg);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* =============================================
+   响应式
+   ============================================= */
+@media (max-width: 768px) {
+  #video {
+    width: 140px;
+    height: 105px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  #colorPicker {
+    top: auto;
+    bottom: 16px;
+    left: 16px;
+    flex-direction: row;
+  }
+
+  .swatch {
+    width: 28px;
+    height: 28px;
+  }
+
+  .gesture-guide {
+    display: none;
+  }
+
+  #status {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+
+  .settings-toggle {
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .settings-panel {
+    top: 60px;
+    right: 16px;
+    width: 240px;
+    padding: 16px;
+  }
+
+  .seal-stamp {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  #video {
+    width: 110px;
+    height: 82px;
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .swatch {
+    width: 24px;
+    height: 24px;
+  }
+
+  #status {
+    font-size: 11px;
+    padding: 6px 12px;
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-icon {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  #video,
+  .swatch,
+  .gesture-item,
+  .settings-toggle,
+  .settings-panel {
+    transition: none;
+  }
+
+  .settings-toggle:hover {
+    transform: none;
+  }
+
+  .toggle-switch,
+  .toggle-switch::after {
+    transition: none;
+  }
+}
+
+/* =============================================
+   水墨风格增强
+   ============================================= */
+
+/* 毛笔笔触边框效果 */
+.gesture-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  background: rgba(40, 35, 30, 0.15);
+  transform: translateY(-50%);
+  border-radius: 1px;
+}
+
+/* 设置面板水墨纹理 */
+.settings-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(80, 70, 60, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(80, 70, 60, 0.02) 0%, transparent 40%);
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(80, 70, 60, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(80, 70, 60, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(80, 70, 60, 0.3);
+}
+
+/* 焦点样式 */
+:focus-visible {
+  outline: 2px solid rgba(80, 70, 60, 0.4);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 重试按钮 */
+.retry-btn {
+  background: rgba(80, 70, 60, 0.15);
+  border: 1px solid rgba(80, 70, 60, 0.3);
+  color: rgba(80, 70, 60, 0.8);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background: rgba(80, 70, 60, 0.25);
+  border-color: rgba(80, 70, 60, 0.5);
+}
